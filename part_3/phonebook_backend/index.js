@@ -11,7 +11,7 @@ morgan.token("data", function (req, res) {
 app.use(
   morgan(":method :url :status :res[content-length] - :response-time ms :data"),
 );
-
+app.use(express.static("dist"));
 let persons = [
   {
     name: "Arto Hellas",
