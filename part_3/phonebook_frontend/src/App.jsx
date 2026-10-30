@@ -124,8 +124,9 @@ const App = () => {
               }, 2000);
             })
             .catch((error) => {
-              console.log(error);
-              setErrorMessage("Error");
+              setErrorMessage(
+                "Name must contain at least 3 characters. Number must contain at least 8 digits and be in the format 01-123456 or 012-12345",
+              );
               setTimeout(() => {
                 setErrorMessage(null);
               }, 2000);
@@ -198,6 +199,7 @@ const App = () => {
       <ul>
         {personsToShow.map((person) => (
           <Person
+            key={person.id}
             person={person}
             deletePerson={() => deletePersonAndNumber(person.id)}
           />
