@@ -1,15 +1,26 @@
 const assert = require('node:assert')
+const bcrypt = require('bcrypt')
 const { test, after, beforeEach, describe } = require('node:test')
 const mongoose = require('mongoose')
 const supertest = require('supertest')
 const app = require('../app')
 const Blog = require('../models/blog')
+const User = require('../models/user')
 const helper = require('./test_helper')
 const api = supertest(app)
 
 beforeEach(async () => {
   await Blog.deleteMany({})
-  await Blog.insertMany(helper.initialBlogs)
+  await User.deleteMany({})
+  const user = helper.initialUsers[0]
+  const passwordHash = await bcrypt.hash(user.password, 10)
+  const newUser = new User({username: user.username, passwordHash: passwordHash, name: user.name})
+  await newUser.save()
+  for(const blog of helper.initialBlogs){
+    const blogToSave = new Blog(blog)
+    blogToSave.user = newUser.id
+    await blogToSave.save()
+  }
 })
 
 describe('returning blogs', () => {
@@ -34,6 +45,7 @@ describe('returning blogs', () => {
 
 describe('adding blogs', () => {
   test('valid blog is added', async () => {
+    const loggedUser = await helper.login()
     const newBlog = {
     title: "First class tests",
     author: "Robert C. Martin",
@@ -42,6 +54,7 @@ describe('adding blogs', () => {
   }
     await api
     .post('/api/blogs')
+    .set({authorization: `Bearer ${loggedUser.token}`})
     .send(newBlog)
     .expect(201)
     .expect('Content-Type', /application\/json/)
@@ -52,7 +65,25 @@ describe('adding blogs', () => {
     assert.strictEqual(latestBlog.title, newBlog.title)
   })
 
+  test('blog is not added without token', async () => {
+    const newBlog = {
+    title: "First class tests",
+    author: "Robert C. Martin",
+    url: "http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.htmll",
+    likes: 10
+  }
+    const response = await api
+    .post('/api/blogs')
+    .send(newBlog)
+    .expect(401)
+
+    const blogs = await helper.blogsInDb()
+    assert.strictEqual(blogs.length, helper.initialBlogs.length)
+    assert(response.body.error.includes('missing or invalid token'))
+  })
+
   test('likes are set to zero if undefined ', async () => {
+    const loggedUser = await helper.login()
     const newBlog = {
     title: "First class tests",
     author: "Robert C. Martin",
@@ -61,38 +92,49 @@ describe('adding blogs', () => {
 
     const response = await api
     .post('/api/blogs')
+    .set({authorization: `Bearer ${loggedUser.token}`})
     .send(newBlog)
     assert.strictEqual(response.body.likes, 0)
   })
 
    test('response 400 if title or url is not set', async () => {
+    const loggedUser = await helper.login()
+   
     const blogWithoutTitle = {
         author: "Robert C. Martin",
         url: "http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.htmll",
+        likes: 10
     }
-    await api
+    const response = await api
     .post('/api/blogs')
+    .set({authorization: `Bearer ${loggedUser.token}`})
     .send(blogWithoutTitle)
-    .expect(400)
+    
+    assert(response.body.error.includes('`title` is required'))
 
     const blogWithoutUrl = {
         title: "First class tests",
         author: "Robert C. Martin",
+        likes: 10
     }
-    await api
+    const response2 = await api
     .post('/api/blogs')
+    .set({authorization: `Bearer ${loggedUser.token}`})
     .send(blogWithoutUrl)
     .expect(400)
+     assert(response2.body.error.includes('`url` is required'))
     const blogs = await helper.blogsInDb()
     assert.strictEqual(blogs.length, helper.initialBlogs.length)
   })
 })
 describe('deleting and updating blogs', () => {
     test('blog can be deleted by id', async () => {
+        const loggedUser = await helper.login()
         const blogsBeforeDeletion = await helper.blogsInDb()
         const blogToDelete = blogsBeforeDeletion[0]
         await api
         .delete(`/api/blogs/${blogToDelete.id}`)
+        .set({authorization: `Bearer ${loggedUser.token}`})
         .expect(204)
 
         const blogsAfterDeletion = await helper.blogsInDb()
