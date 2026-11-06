@@ -9,6 +9,11 @@ blogsRouter.get('/', async (request, response) => {
  response.json(blogs)
 })
 
+blogsRouter.get('/:id', async (request, response) => {
+ const blogs = await Blog.findById(request.params.id).populate('user', { username: 1, name: 1 })
+ response.json(blogs)
+})
+
 blogsRouter.post('/', mw.userExtractor, async (request, response) => {
   const { title, author, url, likes } = request.body
   const user = request.user
@@ -35,7 +40,7 @@ blogsRouter.delete('/:id', mw.userExtractor, async (request, response) => {
 
 blogsRouter.put('/:id', async (request, response) => {
   const { title, author, url, likes } = request.body
-  const blogToUpdate = await Blog.findById(request.params.id)
+  const blogToUpdate = await Blog.findById(request.params.id).populate('user', { username: 1, name: 1 })
   blogToUpdate.title = title
   blogToUpdate.author = author
   blogToUpdate.url = url
