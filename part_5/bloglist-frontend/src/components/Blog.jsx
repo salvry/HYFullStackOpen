@@ -13,7 +13,7 @@ const Blog = ({ blog, handleLikeChange, handleRemove, loggedUser }) => {
 
   return (
     < div className="blog" style={blogStyle} >
-      {blog.author}: {blog.title}
+      {`${blog.author}: ${blog.title}`}
       <div>
         <button className="show-button" onClick={() => setShowDetails(!showDetails)}>{showDetails ? 'hide' : 'view'}</button>
       </div>
