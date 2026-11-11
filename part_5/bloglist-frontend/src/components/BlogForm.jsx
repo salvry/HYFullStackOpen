@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Button, Input, Form, FormGroup } from './StyledComponents'
 
 const BlogForm = ({ createBlog }) => {
   const [title, setTitle] = useState('')
@@ -17,21 +18,21 @@ const BlogForm = ({ createBlog }) => {
   return (
     <div>
       <h2>New blog</h2>
-      <form onSubmit={addBlog}>
-        <label>
-            Title
-          <input id="title" value={title} onChange={event => setTitle(event.target.value)} />
-        </label>
-        <label>
-            Author
-          <input id="author" value={author} onChange={event => setAuthor(event.target.value)} />
-        </label>
-        <label>
-            URL
-          <input id="url" value={url} onChange={event => setUrl(event.target.value)} />
-        </label>
-        <button id="submit-blog" type="submit">Add</button>
-      </form>
+      <Form className="form" onSubmit={addBlog}>
+        <FormGroup>
+          <label htmlFor="title">Title</label>
+          <Input id="title" value={title} onChange={event => setTitle(event.target.value)} />
+        </FormGroup>
+        <FormGroup>
+          <label htmlFor="author">Author</label>
+          <Input id="author" value={author} onChange={event => setAuthor(event.target.value)} />
+        </FormGroup>
+        <FormGroup>
+          <label htmlFor="url">URL</label>
+          <Input id="url" value={url} onChange={event => setUrl(event.target.value)} />
+        </FormGroup>
+        <Button id="submit-blog" type="submit">Add</Button>
+      </Form>
     </div >
   )
 }

@@ -1,20 +1,10 @@
 
-.success-notification {
-    color: green;
-    background: lightgrey;
-    font-size: 20;
-    border-style: solid;
-    border-radius: 5;
-    padding: 10;
-    margin-bottom: 10;
+.navigation a  {
+    padding: 5px;
+    color: white;
+    text-decoration: none;
 }
 
-.error-notification {
-    color: red;
-    background: lightgrey;
-    font-size: 20;
-    border-style: solid;
-    border-radius: 5;
-    padding: 10;
-    margin-bottom: 10;
+.navigation button {
+    margin: 5px;
 }

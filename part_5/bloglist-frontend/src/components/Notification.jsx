@@ -1,12 +1,20 @@
 import '../styles.css'
+import { ErrorNotification, SuccessNotification } from './StyledComponents'
 
 const Notification = ({ notification }) => {
   if(!notification){
     return null
   }
-  return(
-    <div className={notification.type==='success'?'success-notification':'error-notification'}>{notification.message}</div>
-  )
+  if(notification.type==='error'){
+    return(
+      <ErrorNotification>{notification.message}</ErrorNotification>
+    )
+  }
+  if(notification.type==='success'){
+    return(
+      <SuccessNotification>{notification.message}</SuccessNotification>
+    )
+  }
 }
 
 export default Notification

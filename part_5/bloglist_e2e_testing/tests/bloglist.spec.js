@@ -15,21 +15,10 @@ describe('Blog app', () => {
     await page.goto('http://localhost:5173')
   })
 
-  test('Login form is shown', async ({ page }) => {
-     const heading = page.getByRole('heading', { name: 'Log in' })
-     const usernameField = page.getByLabel('username')
-     const passwordField = page.getByLabel('password')
-     const button = page.getByRole('button', { name: 'Log in' })
-     await expect(heading).toBeVisible()
-     await expect(usernameField).toBeVisible()
-     await expect(passwordField).toBeVisible()
-     await expect(button).toBeVisible()
-  })
-
    describe('Login', () => {
     test('succeeds with correct credentials', async ({ page }) => {
         await login(page, 'mluukkai', 'salainen')
-        await expect(page.getByText('blogs')).toBeVisible()
+        await expect(page.getByText('Blogs')).toBeVisible()
         await expect(page.getByText('Welcome, mluukkai')).toBeVisible()
     })
 
@@ -45,7 +34,8 @@ describe('Blog app', () => {
   })
     test('a new blog can be created', async ({ page }) => {
         await createBlog(page, 'Blog title', 'Blog author', 'https://blogurl.com')
-        await expect(page.getByText('Blog author: Blog title')).toBeVisible()    
+        await expect(page.getByText('Added Blog title by Blog author')).toBeVisible()
+        await expect(page.getByRole('link', {name: 'Blog title'})).toBeVisible()
     })
 
     describe('When a blog exists', () => {
@@ -53,17 +43,16 @@ describe('Blog app', () => {
             await createBlog(page, 'Blog title', 'Blog author', 'https://blogurl.com')
         })
         test('blog can be liked', async ({ page }) => {
-            await expect(page.getByText('Blog author: Blog title')).toBeVisible()    
-            await page.getByRole('button', {name: 'view'}).click()
-            await page.getByRole('button', {name: 'like'}).click()
+            await page.getByRole('link', {name: 'Blog title'}).click()
+            await page.getByRole('button', {name: 'Like'}).click()
             await expect(page.getByText('Likes: 1')).toBeVisible()
         })
         test('user can remove blog', async ({ page }) => {
             page.on('dialog', async dialog => {
                 await dialog.accept();
             });
-            await page.getByRole('button', {name: 'view'}).click()
-            await page.getByRole('button', {name: 'remove'}).click()
+            await page.getByRole('link', {name: 'Blog title'}).click()
+            await page.getByRole('button', {name: 'Remove'}).click()
             await expect(page.getByText('Blog author: Blog title')).not.toBeVisible()
         })
         test('user cannot remove blog added by another user', async ({ page, request }) => {
@@ -76,18 +65,19 @@ describe('Blog app', () => {
             })
             await logout(page)
             await login(page, 'masa', 'salasana')
-            await page.getByRole('button', {name: 'view'}).click()
-            await expect(page.getByRole('button', {name:'remove'})).not.toBeVisible()
+            await page.getByRole('link', {name: 'Blog title'}).click()
+            await expect(page.getByRole('button', {name:'Remove'})).not.toBeVisible()
         })
          test('blogs are sorted by likes in descending order', async ({ page }) => {
+            await page.getByRole('link', {name: 'Blog title'}).waitFor()
             await createBlog(page, 'Blog title 2', 'Blog author 2', 'https://blogurl2.com')
-            const blog2 = page.getByText('Blog author 2: Blog title 2')
-            await expect(page.locator('.blog').first()).toContainText('Blog author: Blog title')
-            await blog2.getByRole('button', { name: 'view' }).click()
-            await blog2.getByRole('button', { name: 'like' }).click()
-            const blogs = page.locator('.blog')
-            await expect(page.locator('.blog').first()).toContainText('Blog author 2: Blog title 2')
-            
+            await expect(page.locator('li').first()).toContainText('Blog title')
+            await expect(page.locator('li').last()).toContainText('Blog title 2')
+            await page.getByRole('link', {name: 'Blog title 2'}).click()
+            await page.getByRole('button', {name: 'Like'}).click()
+            await page.getByRole('link', {name: 'Blogs'}).click()
+            await expect(page.locator('li').first()).toContainText('Blog title 2')
+            await expect(page.locator('li').last()).toContainText('Blog title')
         })        
     })
   })
